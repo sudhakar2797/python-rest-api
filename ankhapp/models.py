@@ -34,6 +34,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     """Database model for user in the system"""
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
     is_activate = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
