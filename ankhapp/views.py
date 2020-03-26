@@ -1,15 +1,16 @@
 # Create your views here.
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ankhapp import serializers
 from ankhapp.models import UserProfile, UserProfileManager
 from ankhapp.serializers import WelcomeSerializer
 
 
 class WelcomeAPIView(APIView):
     """Test API Views"""
-    serializer_class=WelcomeSerializer
+    serializer_class = WelcomeSerializer
 
     def get(self, request, format=None):
         """Returns a list of APIView features"""
@@ -19,29 +20,68 @@ class WelcomeAPIView(APIView):
             'give u most control over application logic'
             'is mapped manually to urls'
         ]
-        return Response({'message': 'Hello!','an_apiview': an_apiview})
+        return Response({'message': 'Hello!', 'an_apiview': an_apiview})
 
-    def post(self,request):
+    def post(self, request):
         """Returns data with post call"""
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            name = serializer.validated_data.get('name')
+            password = serializer.validated_data.get('password')
+            message = f'Welcome {name},{email},{password}'
+            return Response({'message': message})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk=None):
+        """Return Put method response replace"""
+        return Response({'message': 'PUT response'})
+
+    def patch(self, request, pk=None):
+        """Return Patch method response update"""
+        return Response({'message': 'Patch response'})
+
+    def delete(self, request, pk=None):
+        """Return Delete method response delete"""
+        return Response({'message': 'Delete response'})
+
+
+class WelcomeViewSet(viewsets.ViewSet):
+    """API viewset"""
+    serializer_class=serializers.WelcomeSerializer
+
+    def list(self, request):
+        """return a hello message"""
+        a_viewset=['user action[update,partial update,delete,retrieve]',
+                   'automatically map to route urls',
+                   'provide more functionality with less code']
+        return Response({'message':a_viewset})
+
+    def create(self,request):
+        """create new user message"""
         serializer=self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            email=serializer.validated_data.get('email')
             name=serializer.validated_data.get('name')
-            password=serializer.validated_data.get('password')
-            message=f'Welcome {name},{email},{password}'
-            return Response({'message':message})
+            message=f'welcome {name}'
+            return  Response({'message':message})
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self,request,pk=None):
-        """Return Put method response replace"""
-        return Response({'message':'PUT response'})
+    def retrieve(self,request,pk=None):
+        """update row with primary key"""
+        return Response({'message':'GET'})
 
-    def patch(self,request,pk=None):
-        """Return Patch method response update"""
-        return Response({'message':'Patch response'})
+    def update(self,request,pk=None):
+        """update row with primary key"""
+        return Response({'message':'PUT'})
 
-    def delete(self,request,pk=None):
-        """Return Delete method response delete"""
-        return Response({'message':'Delete response'})
+    def partial_update(self,request,pk=None):
+        """update row with primary key"""
+        return Response({'message':'PATCH'})
+
+    def destroy(self,request,pk=None):
+        """update row with primary key"""
+        return Response({'message':'DELETE'})
