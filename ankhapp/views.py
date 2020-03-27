@@ -111,7 +111,11 @@ class CheckValidUser(APIView):
             password = serializer.validated_data.get('password')
             data = models.UserProfile.objects.get(email=email)
             if check_password(password, data.password):
-                return Response({'login': 'success'})
+                if email == 'sudhakar.it.12345@gmail.com':
+                    role = 'admin'
+                else:
+                    role = 'user'
+                return Response({'login': 'success', 'role': role,'id':data.id})
             else:
                 return Response({"msg": "unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -121,5 +125,4 @@ class CheckValidUser(APIView):
 class TaskDetailsViewSet(viewsets.ModelViewSet):
     """return user task details"""
     serializer_class = TaskSerializer
-    queryset = models.TaskDetails.objects.all().order_by('task_id')
-
+    queryset = models.TaskDetails.objects.all().order_by('task_id').order_by('task_status')
