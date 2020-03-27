@@ -1,11 +1,14 @@
 # Create your views here.
+from django.db.models import Q
 from rest_framework import status, viewsets
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ankhapp import serializers
+from ankhapp import serializers, models, permissions
 from ankhapp.models import UserProfile, UserProfileManager
-from ankhapp.serializers import WelcomeSerializer
+from ankhapp.serializers import WelcomeSerializer, TaskSerializer
+from django.contrib.auth.hashers import check_password
 
 
 class WelcomeAPIView(APIView):
@@ -50,38 +53,73 @@ class WelcomeAPIView(APIView):
 
 class WelcomeViewSet(viewsets.ViewSet):
     """API viewset"""
-    serializer_class=serializers.WelcomeSerializer
+    serializer_class = serializers.WelcomeSerializer
 
     def list(self, request):
         """return a hello message"""
-        a_viewset=['user action[update,partial update,delete,retrieve]',
-                   'automatically map to route urls',
-                   'provide more functionality with less code']
-        return Response({'message':a_viewset})
+        a_viewset = ['user action[update,partial update,delete,retrieve]',
+                     'automatically map to route urls',
+                     'provide more functionality with less code']
+        return Response({'message': a_viewset})
 
-    def create(self,request):
+    def create(self, request):
         """create new user message"""
-        serializer=self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            name=serializer.validated_data.get('name')
-            message=f'welcome {name}'
-            return  Response({'message':message})
+            name = serializer.validated_data.get('name')
+            message = f'welcome {name}'
+            return Response({'message': message})
         else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self,request,pk=None):
+    def retrieve(self, request, pk=None):
         """update row with primary key"""
-        return Response({'message':'GET'})
+        return Response({'message': 'GET'})
 
-    def update(self,request,pk=None):
+    def update(self, request, pk=None):
         """update row with primary key"""
-        return Response({'message':'PUT'})
+        return Response({'message': 'PUT'})
 
-    def partial_update(self,request,pk=None):
+    def partial_update(self, request, pk=None):
         """update row with primary key"""
-        return Response({'message':'PATCH'})
+        return Response({'message': 'PATCH'})
 
-    def destroy(self,request,pk=None):
+    def destroy(self, request, pk=None):
         """update row with primary key"""
-        return Response({'message':'DELETE'})
+        return Response({'message': 'DELETE'})
+
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """ handle creating and updating profiles"""
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.UpdateOwnProfile,)
+
+
+class CheckValidUser(APIView):
+    """Check user credentials"""
+    serializer_class = serializers.LoginSerializer
+
+    def post(self, request):
+        """Returns data with post call"""
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            password = serializer.validated_data.get('password')
+            data = models.UserProfile.objects.get(email=email)
+            if check_password(password, data.password):
+                return Response({'login': 'success'})
+            else:
+                return Response({"msg": "unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskDetailsViewSet(viewsets.ModelViewSet):
+    """return user task details"""
+    serializer_class = TaskSerializer
+    queryset = models.TaskDetails.objects.all().order_by('task_id')
+

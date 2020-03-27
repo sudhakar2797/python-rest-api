@@ -54,3 +54,23 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         """Return strign representation of the user"""
         return self.email
+
+
+status = (('unassigned', 'UNASSIGNED'), ('assigned', 'ASSIGNED'), ('completed', 'COMPLETED'))
+
+duration = (('1 hr', '1'), ('2 hr', '2'), ('3 hr', '3'), ('4 hr', '4'), ('5 hr', '5'))
+
+
+class TaskDetails(models.Model):
+    task_id = models.AutoField(primary_key=True)
+    task_name = models.CharField(max_length=255)
+    task_description = models.TextField(max_length=500)
+    assigned_to = models.CharField(max_length=100,blank=True)
+    created_by = models.CharField(max_length=100)
+    task_duration = models.CharField(max_length=10, choices=duration, default='1 hr')
+    task_status = models.CharField(max_length=10, choices=status, default='unassigned')
+
+    def __str__(self):
+        """return task details"""
+        return f'{self.task_id} == {self.task_name}'
+

@@ -20,8 +20,11 @@ from ankhapp import views
 
 router=DefaultRouter()
 router.register('welcome-viewset',views.WelcomeViewSet,basename='welcome-viewset')
+router.register('welcome-modelviewset',views.UserProfileViewSet,basename='welcome-modelviewset')
+router.register('taskdetails',views.TaskDetailsViewSet,basename='taskdetailsviewset')
 
 urlpatterns = [
     path('get-hello/',views.WelcomeAPIView.as_view()),
+    path('login/',views.CheckValidUser.as_view()),
     path('',include(router.urls))
 ]
